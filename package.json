@@ -1,0 +1,23 @@
+{
+    "name": "url-shortener-microservice",
+    "version": "0.0.3",
+    "main": "index.js",
+    "scripts": {
+        "start": "node --watch index.js"
+    },
+    "dependencies": {
+        "body-parser": "^2.2.0",
+        "cors": "^2.8.5",
+        "dotenv": "^17.0.1",
+        "express": "^5.1.0",
+        "express-rate-limit": "^7.5.1",
+        "helmet": "^8.1.0",
+        "morgan": "^1.10.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Nalyvaiko/url-shortener-microservice"
+    },
+    "author": "Vitalii Nalyvaiko",
+    "license": "MIT"
+}
