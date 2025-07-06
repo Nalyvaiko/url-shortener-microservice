@@ -6,10 +6,12 @@ const dns = require('dns');
 const express = require('express');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
+const path = require('node:path');
 const rateLimit = require('express-rate-limit');
+const { URL } = require('node:url');
 
 const app = express();
+const urlDatabase = [];
 
 app.use(bodyParser.urlencoded());
 app.use(cors({ optionsSuccessStatus: 200 }));
@@ -29,14 +31,54 @@ app.get('/', (req, res) => {
 });
 
 // --- API ---
-
-// body-parser - for post request
-// dns.lookup (host, cb) - to verify a submitted URL
-
 app.post('/api/shorturl', (req, res) => {
-    res.json({ result: 'POST request to homepage' });
+    const inputUrl = req.body.url;
+
+    let hostname;
+    try {
+        const parsed = new URL(inputUrl);
+        hostname = parsed.hostname;
+    } catch (err) {
+        return res.json({ error: 'invalid url' });
+    }
+
+    dns.lookup(hostname, (err, address, family) => {
+        if (err) {
+            return res.json({ error: 'invalid url' });
+        }
+
+        console.log('Found address: %j family: IPv%s', address, family);
+
+        const existing = urlDatabase.find(
+            (entry) => entry.original_url === inputUrl
+        );
+
+        if (existing) {
+            return res.json(existing);
+        }
+
+        const newEntry = {
+            original_url: inputUrl,
+            short_url: urlDatabase.length + 1,
+        };
+
+        urlDatabase.push(newEntry);
+        return res.json(newEntry);
+    });
 });
 
+app.get('/api/shorturl/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const entry = urlDatabase.find((entry) => entry.short_url === id);
+
+    if (entry) {
+        return res.redirect(entry.original_url);
+    }
+
+    return res.status(404).json({
+        error: 'No short URL for given input was found',
+    });
+});
 // -----------
 
 app.use((err, req, res, next) => {
